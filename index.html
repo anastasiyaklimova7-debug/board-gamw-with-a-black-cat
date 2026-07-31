@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cat Board Game - Grammar 's</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
+
+<style>
+  :root {
+    --primary-font: 'Fredoka', 'Nunito', sans-serif;
+    --tile-size: clamp(85px, 14vmin, 150px);
+    --hero-size: clamp(110px, 18vmin, 190px);
+    --bg-color: #0d1128;
+    --text-color: #ffffff;
+    --modal-bg: rgba(30, 15, 50, 0.95);
+    --btn-correct: #4ade80;
+    --btn-wrong: #f87171;
+    --btn-neutral: #9333ea;
+  }
+
+  * { box-sizing: border-box; }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: var(--primary-font);
+    background-color: var(--bg-color);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .game-wrap {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: url("https://i.postimg.cc/QMX7fQ4K/clean-image-2026-07-29T013319-216-kopia.png") center/cover no-repeat;
+  }
+
+  header {
+    width: 100%;
+    padding: 10px 20px;
+    text-align: center;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: clamp(24px, 4vw, 36px);
+    color: #fff;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 20px rgba(100,200,255,0.6);
+    letter-spacing: 1px;
+  }
+
+  .board {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .svg-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .tiles-container {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  .tile {
+    position: absolute;
+    width: var(--tile-size);
+    height: var(--tile-size);
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+
+  .tile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.6));
+    transition: filter 0.3s ease, transform 0.3s ease;
+  }
+
+  .tile.active .tile-img {
+    filter: 
+      drop-shadow(0 8px 12px rgba(0,0,0,0.8))
+      drop-shadow(0 0 15px rgba(255, 215, 0, 0.8))
+      drop-shadow(0 0 30px rgba(255, 255, 255, 0.5));
+    transform: scale(1.15);
+    animation: pulsePaw 1.5s infinite alternate;
+  }
+
+  @keyframes pulsePaw {
+    0% { transform: scale(1.1); }
+    100% { transform: scale(1.2); }
+  }
+
+  .tile-number {
+    position: absolute;
+    bottom: -20px;
+    font-weight: 900;
+    font-size: clamp(16px, 2.5vmin, 22px);
+    color: #fff;
+    background: #9333ea;
+    padding: 2px 10px;
+    border-radius: 12px;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    z-index: 3;
+  }
+
+  .hero {
+    position: absolute;
+    width: var(--hero-size);
+    height: var(--hero-size);
+    transform: translate(-50%, -85%);
+    pointer-events: none;
+    z-index: 100;
+    transition: left 0.4s ease-in-out, top 0.4s ease-in-out;
+  }
+
+  .hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6));
+    animation: heroBob 2s ease-in-out infinite;
+  }
+
+  @keyframes heroBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px) rotate(2deg); }
+  }
+
+  .fish-goal {
+    position: absolute;
+    width: clamp(80px, 13vmin, 140px);
+    height: clamp(80px, 13vmin, 140px);
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    filter: drop-shadow(0 5px 10px rgba(255, 215, 0, 0.5));
+    animation: fishFloat 3s ease-in-out infinite;
+  }
+
+  .fish-goal img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  @keyframes fishFloat {
+    0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+    50% { transform: translate(-50%, -60%) rotate(5deg); }
+  }
+
+  .hud {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    z-index: 10;
+    background: rgba(30, 15, 50, 0.85);
+    padding: 15px 35px;
+    border-radius: 24px;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+  }
+
+  .dice-instruction {
+    color: #e9d5ff;
+    font-weight: 700;
+    font-size: 18px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  .dice2d {
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
+    background: radial-gradient(140% 140% at 30% 30%, #ffffff, #e9d5ff 60%, #c084fc 100%);
+    box-shadow:
+      inset 0 0 0 2px #7e22ce,
+      inset 0 0 15px rgba(126, 34, 206, 0.3),
+      0 6px 15px rgba(0,0,0,0.5),
+      0 0 15px rgba(168, 85, 247, 0.4);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.15s ease;
+  }
+
+  .dice2d:active {
+    transform: scale(0.95) translateY(4px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  }
+
+  .dice2d.wiggle {
+    animation: diceWiggle 0.4s ease-in-out infinite;
+  }
+
+  @keyframes diceWiggle {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    25% { transform: rotate(-8deg) translateY(-2px); }
+    50% { transform: rotate(8deg) translateY(1px); }
+    75% { transform: rotate(-4deg) translateY(-1px); }
+  }
+
+  .dice2d .pip-grid {
+    width: 70%;
+    height: 70%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .dice2d .pip {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(120% 120% at 30% 30%, #a855f7, #6b21a8);
+    box-shadow:
+      0 0 5px rgba(147, 51, 234, 0.8),
+      inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  }
+
+  .dice-btn {
+    background: linear-gradient(135deg, #a855f7, #7e22ce);
+    color: white;
+    font-size: 20px;
+    font-weight: 900;
+    padding: 12px 35px;
+    border: 3px solid #fff;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #581c87, 0 10px 20px rgba(0,0,0,0.5);
+    transition: all 0.1s;
+    font-family: inherit;
+    letter-spacing: 1px;
+  }
+
+  .dice-btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 0px 0 #581c87, 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    background: var(--modal-bg);
+    width: 90%;
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 30px;
+    border: 4px solid #a855f7;
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(0,0,0,0.8);
+    text-align: center;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .overlay.show .modal {
+    transform: scale(1) translateY(0);
+  }
+
+  .task-sentence {
+    font-size: clamp(22px, 5vw, 28px);
+    color: #fff;
+    margin-bottom: 30px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.3);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px dashed rgba(255,255,255,0.3);
+  }
+
+  .answers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .answer-btn {
+    background: var(--btn-neutral);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.2);
+    padding: 15px;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .answer-btn:hover {
+    background: #7e22ce;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  }
+
+  .answer-btn.correct {
+    background: var(--btn-correct);
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
+  }
+
+  .answer-btn.wrong {
+    background: var(--btn-wrong);
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  .modal-actions {
+    margin-top: 25px;
+  }
+
+  .continue-btn {
+    background: #eab308;
+    color: #451a03;
+    font-size: 20px;
+    font-weight: 900;
+    padding: 12px 40px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    display: none;
+    margin: 0 auto;
+    box-shadow: 0 6px 0 #a16207, 0 10px 20px rgba(0,0,0,0.4);
+    transition: transform 0.1s;
+  }
+
+  .continue-btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 0px 0 #a16207;
+  }
+
+  .win-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    animation: pulsePaw 2s infinite;
+  }
+
+  .win-title {
+    color: #ffd700;
+    font-size: 36px;
+    font-weight: 900;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+  }
+
+  .win-text {
+    color: #e2e8f0;
+    font-size: 20px;
+    margin-bottom: 30px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="game-wrap">
+  <header>
+    <h1>What does 's mean?</h1>
+  </header>
+
+  <div class="board" id="board">
+    <svg class="svg-layer" id="svg-layer"></svg>
+    <div class="tiles-container" id="tiles-container"></div>
+    
+    <div class="fish-goal" id="fish-goal">
+      <img src="https://i.postimg.cc/vmQn0rqs/Gemini-Generated-Image-wj00tuwj00tuwj00.png" alt="Fish">
+    </div>
+
+    <div class="hero" id="hero">
+      <img src="https://i.postimg.cc/mrb9mYXD/Gemini-Generated-Image-84o2r884o2r884o2.png" alt="Hero Cat">
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="dice-instruction" id="dice-instruction">Roll the dice to move!</div>
+    <div class="dice2d" id="dice2d">
+      <div class="pip-grid" id="pipGrid"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="task-overlay">
+    <div class="modal">
+      <div class="task-sentence" id="task-sentence">Question text here...</div>
+      <div class="answers-grid" id="answers-grid">
+        <button class="answer-btn" data-answer="is">is</button>
+        <button class="answer-btn" data-answer="has">has</button>
+        <button class="answer-btn" data-answer="possessive case">possessive case</button>
+      </div>
+      <div class="modal-actions">
+        <button class="continue-btn" id="continue-btn">Excellent! Continue ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="win-overlay">
+    <div class="modal">
+      <img class="win-icon" src="https://i.postimg.cc/vmQn0rqs/Gemini-Generated-Image-wj00tuwj00tuwj00.png" alt="Fish">
+      <div class="win-title">Purrfect!</div>
+      <div class="win-text">The cat got the fish and you mastered the grammar!</div>
+      <button class="dice-btn" style="box-shadow: none;" onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const NUM_TILES = 22;
+  const ASSETS = {
+    paw: "https://i.postimg.cc/zfJhxCtf/Gemini-Generated-Image-n7ymren7ymren7ym.png"
+  };
+
+  // 20 unique tasks for tiles 2-21
+  const TASKS = [
+    { text: "My brother's got a new bicycle.", answer: "has" },
+    { text: "Where is the dog's bone?", answer: "possessive case" },
+    { text: "He's reading a very interesting book.", answer: "is" },
+    { text: "She's got two sisters.", answer: "has" },
+    { text: "This is Tom's cat.", answer: "possessive case" },
+    { text: "It's a beautiful day today.", answer: "is" },
+    { text: "The cat's tail is long and fluffy.", answer: "possessive case" },
+    { text: "She's happy today.", answer: "is" },
+    { text: "David's got blue eyes and blonde hair.", answer: "has" },
+    { text: "Here is the dog's toy.", answer: "possessive case" },
+    { text: "He's a very famous actor.", answer: "is" },
+    { text: "The teacher's got a lot of work.", answer: "has" },
+    { text: "Look at the bird! It's flying so high.", answer: "is" },
+    { text: "My sister's room is always tidy.", answer: "possessive case" },
+    { text: "He's got a bad cold today.", answer: "has" },
+    { text: "Who is that? It's my uncle.", answer: "is" },
+    { text: "The boy's ball is blue.", answer: "possessive case" },
+    { text: "She's got a lovely singing voice.", answer: "has" },
+    { text: "The sun's shining brightly.", answer: "is" },
+    { text: "I like Anna's dress.", answer: "possessive case" }
+  ];
+
+  // S-Curve Path Layout using relative percentages (X, Y) 4 rows tightly packed
+  const PATH_PERCENTAGES = [
+    // Row 1 ->
+    {x: 10, y: 10}, {x: 26, y: 13}, {x: 42, y: 9}, {x: 58, y: 14}, {x: 74, y: 10}, {x: 90, y: 15},
+    // Row 2 <-
+    {x: 88, y: 31}, {x: 70, y: 34}, {x: 52, y: 30}, {x: 34, y: 35}, {x: 15, y: 31},
+    // Row 3 ->
+    {x: 12, y: 50}, {x: 28, y: 53}, {x: 45, y: 49}, {x: 62, y: 54}, {x: 78, y: 50}, {x: 92, y: 55},
+    // Row 4 <-
+    {x: 89, y: 72}, {x: 72, y: 69}, {x: 55, y: 73}, {x: 38, y: 70}, {x: 20, y: 74}
+  ];
+
+  let currentTileIndex = 0; // 0 is Start (Tile 1), 21 is Finish (Tile 22)
+  let positions = [];
+  let isMoving = false;
+  let lastRoll = 0;
+
+  const boardEl = document.getElementById('board');
+  const tilesContainer = document.getElementById('tiles-container');
+  const svgLayer = document.getElementById('svg-layer');
+  const heroEl = document.getElementById('hero');
+  const fishEl = document.getElementById('fish-goal');
+  const dice2d = document.getElementById('dice2d');
+  const pipGrid = document.getElementById('pipGrid');
+  const diceInstruction = document.getElementById('dice-instruction');
+
+  // Modals
+  const taskOverlay = document.getElementById('task-overlay');
+  const taskSentence = document.getElementById('task-sentence');
+  const answerBtns = document.querySelectorAll('.answer-btn');
+  const continueBtn = document.getElementById('continue-btn');
+  const winOverlay = document.getElementById('win-overlay');
+
+  function calculatePositions() {
+    const rect = boardEl.getBoundingClientRect();
+    positions = PATH_PERCENTAGES.map(p => ({
+      x: (p.x / 100) * rect.width,
+      y: (p.y / 100) * rect.height
+    }));
+  }
+
+  function drawLines() {
+    if (positions.length === 0) return;
+    let pathD = `M ${positions[0].x} ${positions[0].y}`;
+    for (let i = 1; i < positions.length; i++) {
+      pathD += ` L ${positions[i].x} ${positions[i].y}`;
+    }
+    svgLayer.innerHTML = `<path d="${pathD}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="6" stroke-dasharray="12 12" stroke-linecap="round" />`;
+  }
+
+  function createTiles() {
+    tilesContainer.innerHTML = '';
+    positions.forEach((pos, index) => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.id = `tile-${index}`;
+      tile.style.left = `${pos.x}px`;
+      tile.style.top = `${pos.y}px`;
+
+      const img = document.createElement('img');
+      img.className = 'tile-img';
+      img.src = ASSETS.paw;
+      img.alt = 'Paw Tile';
+
+      const number = document.createElement('div');
+      number.className = 'tile-number';
+      number.textContent = index === 0 ? 'START' : (index === NUM_TILES - 1 ? 'FINISH' : index);
+
+      tile.appendChild(img);
+      tile.appendChild(number);
+      tilesContainer.appendChild(tile);
+    });
+  }
+
+  function updateVisuals() {
+    calculatePositions();
+    drawLines();
+    
+    // Update tile positions on resize
+    positions.forEach((pos, index) => {
+      const tile = document.getElementById(`tile-${index}`);
+      if (tile) {
+        tile.style.left = `${pos.x}px`;
+        tile.style.top = `${pos.y}px`;
+      }
+    });
+
+    // Highlight current tile
+    document.querySelectorAll('.tile').forEach((t, i) => {
+      if (i === currentTileIndex) {
+        t.classList.add('active');
+      } else {
+        t.classList.remove('active');
+      }
+    });
+
+    // Update Cat position
+    if (positions[currentTileIndex]) {
+      heroEl.style.left = `${positions[currentTileIndex].x}px`;
+      heroEl.style.top = `${positions[currentTileIndex].y}px`;
+    }
+
+    // Update Fish Position (to the left of the last tile)
+    const lastPos = positions[NUM_TILES - 1];
+    if (lastPos) {
+      fishEl.style.left = `${lastPos.x - 100}px`;
+      fishEl.style.top = `${lastPos.y + 10}px`;
+    }
+  }
+
+  function moveCat(steps, direction = 1) {
+    if (steps <= 0) {
+      isMoving = false;
+      if (direction === 1) {
+        handleTileLand();
+      } else {
+        diceInstruction.textContent = "Roll the dice to move!";
+      }
+      return;
+    }
+
+    currentTileIndex += direction;
+    
+    if (currentTileIndex >= NUM_TILES - 1) {
+      currentTileIndex = NUM_TILES - 1; // Cap at finish
+      steps = 1; // Force stop next tick
+    }
+    if (currentTileIndex <= 0) {
+      currentTileIndex = 0; // Cap at start
+      steps = 1; // Force stop next tick
+    }
+
+    updateVisuals();
+
+    // Delay before next step
+    setTimeout(() => {
+      moveCat(steps - 1, direction);
+    }, 400); // 400ms per tile step
+  }
+
+  const pipLayouts = {
+    1: [[2,2]],
+    2: [[1,1], [3,3]],
+    3: [[1,1], [2,2], [3,3]],
+    4: [[1,1], [1,3], [3,1], [3,3]],
+    5: [[1,1], [1,3], [2,2], [3,1], [3,3]],
+    6: [[1,1], [1,3], [2,1], [2,3], [3,1], [3,3]]
+  };
+
+  function renderPips(n) {
+    pipGrid.innerHTML = '';
+    (pipLayouts[n] || [[2,2]]).forEach(([r, c]) => {
+      const d = document.createElement('div');
+      d.className = 'pip';
+      d.style.gridRow = r;
+      d.style.gridColumn = c;
+      pipGrid.appendChild(d);
+    });
+  }
+  renderPips(1);
+
+  function rollDiceVisual(finalValue, cb) {
+    const steps = 10;
+    let count = 0;
+    const timer = setInterval(() => {
+      count++;
+      if (count >= steps) {
+        clearInterval(timer);
+        renderPips(finalValue);
+        cb && cb();
+        return;
+      }
+      renderPips(1 + Math.floor(Math.random() * 3));
+    }, 80);
+  }
+
+  dice2d.addEventListener('click', () => {
+    if (isMoving) return;
+    isMoving = true;
+    
+    // Roll a number between 1 and 3 (makes the 22-tile board last nicely)
+    lastRoll = Math.floor(Math.random() * 3) + 1;
+    
+    diceInstruction.textContent = `Rolling...`;
+    dice2d.classList.add('wiggle');
+    
+    rollDiceVisual(lastRoll, () => {
+      dice2d.classList.remove('wiggle');
+      diceInstruction.textContent = `You rolled ${lastRoll}!`;
+      moveCat(lastRoll, 1);
+    });
+  });
+
+  let currentTaskAnswer = "";
+
+  function handleTileLand() {
+    // If reached Finish
+    if (currentTileIndex === NUM_TILES - 1) {
+      setTimeout(() => {
+        winOverlay.classList.add('show');
+      }, 500);
+      return;
+    }
+
+    // Tiles 1 to 20 correspond to TASKS array index 0 to 19
+    const taskIndex = currentTileIndex - 1;
+    
+    if (taskIndex >= 0 && taskIndex < TASKS.length) {
+      showTaskModal(TASKS[taskIndex]);
+    } else {
+      diceInstruction.textContent = "Roll the dice to move!";
+    }
+  }
+
+  function showTaskModal(task) {
+    taskSentence.textContent = task.text;
+    currentTaskAnswer = task.answer;
+    
+    // Reset buttons
+    answerBtns.forEach(btn => {
+      btn.className = 'answer-btn'; // reset classes
+      btn.disabled = false;
+    });
+    continueBtn.style.display = 'none';
+    
+    taskOverlay.classList.add('show');
+  }
+
+  // Answer validation
+  answerBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const selected = e.target.getAttribute('data-answer');
+      
+      if (selected === currentTaskAnswer) {
+        // Correct
+        e.target.classList.add('correct');
+        // Disable all buttons
+        answerBtns.forEach(b => b.disabled = true);
+        // Show continue
+        continueBtn.style.display = 'block';
+      } else {
+        // Wrong
+        e.target.classList.add('wrong');
+        answerBtns.forEach(b => b.disabled = true);
+        
+        setTimeout(() => {
+          e.target.classList.remove('wrong');
+          taskOverlay.classList.remove('show');
+          diceInstruction.textContent = `Oops! Go back ${lastRoll} space(s).`;
+          isMoving = true;
+          moveCat(lastRoll, -1);
+        }, 1200);
+      }
+    });
+  });
+
+  continueBtn.addEventListener('click', () => {
+    taskOverlay.classList.remove('show');
+    diceInstruction.textContent = "Great job! Roll again.";
+  });
+
+  window.addEventListener('resize', () => {
+    updateVisuals();
+  });
+
+  // Shuffle TASKS array for randomization
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+  shuffleArray(TASKS);
+
+  // Init Game
+  calculatePositions();
+  createTiles();
+  updateVisuals();
+
+</script>
+</body>
+</html>
