@@ -40,7 +40,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: url("https://i.postimg.cc/QMX7fQ4K/clean-image-2026-07-29T013319-216-kopia.png") center/cover no-repeat;
+    background: var(--bg-color) url("back.png") center/cover no-repeat;
   }
 
   header {
@@ -421,11 +421,11 @@
     <div class="tiles-container" id="tiles-container"></div>
     
     <div class="fish-goal" id="fish-goal">
-      <img src="https://i.postimg.cc/vmQn0rqs/Gemini-Generated-Image-wj00tuwj00tuwj00.png" alt="Fish">
+      <img src="fish.png" alt="Fish">
     </div>
 
     <div class="hero" id="hero">
-      <img src="https://i.postimg.cc/mrb9mYXD/Gemini-Generated-Image-84o2r884o2r884o2.png" alt="Hero Cat">
+      <img src="bcat.png" alt="Black Cat">
     </div>
   </div>
 
@@ -452,7 +452,7 @@
 
   <div class="overlay" id="win-overlay">
     <div class="modal">
-      <img class="win-icon" src="https://i.postimg.cc/vmQn0rqs/Gemini-Generated-Image-wj00tuwj00tuwj00.png" alt="Fish">
+      <img class="win-icon" src="fish.png" alt="Fish">
       <div class="win-title">Purrfect!</div>
       <div class="win-text">The cat got the fish and you mastered the grammar!</div>
       <button class="dice-btn" style="box-shadow: none;" onclick="location.reload()">PLAY AGAIN</button>
@@ -463,7 +463,7 @@
 <script>
   const NUM_TILES = 22;
   const ASSETS = {
-    paw: "https://i.postimg.cc/zfJhxCtf/Gemini-Generated-Image-n7ymren7ymren7ym.png"
+    paw: "lap.png"
   };
 
   // 20 unique tasks for tiles 2-21
